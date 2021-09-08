@@ -68,11 +68,13 @@ type Cbo struct {
 	pos mgl32.Vec3
 	rot mgl32.Vec3
 }
+
 type ColorTest struct {
 	r float32
 	g float32
 	b float32
 }
+type ColorMerde [3]float32
 
 // initOpenGL initializes OpenGL and returns an intiialized program.
 func initOpenGL() uint32 {
@@ -131,8 +133,8 @@ func main() {
 	NoiseInitPermtables(42)
 
 	var angleIncrement float64 = 10.1664073846 // TAU * golden ratio
-	var totalPoints int = 5000
-	var s float32 = 50 // scale
+	var totalPoints int = 250000
+	var s float32 = 5000 // scale
 
 	var seaLevel float64 = 0.3
 
@@ -205,9 +207,7 @@ func main() {
 
 	redUniform := gl.GetUniformLocation(program, gl.Str("red\x00"))
 
-	cameraCStr, free := gl.Strs("camera")
-	defer free()
-	cameraId := gl.GetUniformLocation(program, *cameraCStr)
+	cameraId := gl.GetUniformLocation(program, gl.Str("camera\x00"))
 
 	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 	gl.PointSize(5)
@@ -232,7 +232,7 @@ func setCamera(cameraId int32, cbo *Cbo) {
 	camera = camera.Mul4(mgl32.HomogRotate3D(cbo.rot.Y(), mgl32.Vec3{0, 1, 0}))
 	camera = camera.Mul4(mgl32.Translate3D(cbo.pos.X(), cbo.pos.Y(), cbo.pos.Z()))
 
-	projection := mgl32.Perspective(mgl32.DegToRad(80.0), float32(width)/float32(height), 0.1, 5000)
+	projection := mgl32.Perspective(mgl32.DegToRad(80.0), float32(width)/float32(height), 0.1, 50000)
 	view := projection.Mul4(camera)
 
 	gl.UniformMatrix4fv(cameraId, 1, false, &view[0])
@@ -266,9 +266,9 @@ func makeVao(points []float32) uint32 {
 	gl.BindVertexArray(vao)
 	gl.EnableVertexAttribArray(0)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 6*4, nil)
+	gl.VertexAttribPointerWithOffset(0, 3, gl.FLOAT, false, 6*4, 0)
 	gl.EnableVertexAttribArray(0)
-	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(3*4))
+	gl.VertexAttribPointerWithOffset(1, 3, gl.FLOAT, false, 6*4, 3*4)
 	gl.EnableVertexAttribArray(1)
 
 	gl.BindVertexArray(0)
