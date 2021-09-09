@@ -10,6 +10,13 @@ type Vector3 struct {
 	z float64
 }
 
+type SimplexDt struct {
+	n    float64
+	a    float64
+	freq float64
+	oct  int
+}
+
 type Seeder struct {
 	perm  [512]int
 	gradP [512]Vector3
@@ -41,30 +48,30 @@ var defaultPermutations = [512]int{151, 160, 137, 91, 90, 15,
 	49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254,
 	138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180}
 
-func Noise3dSimplex(x, y, z float64, seed int) float64 {
+func Noise3dSimplex(x, y, z float64, seed int, dt SimplexDt) float64 {
 	x = math.Abs(x)
 	y = math.Abs(y)
 	z = math.Abs(z)
 
-	var n float64 = 0.0
-	var a float64 = 0.25
-	var freq float64 = 0.75
+	// var n float64 = 0.0
+	// var a float64 = 0.25
+	// var freq float64 = 0.75
 
-	for octave := 0; octave < 5; octave++ {
-		var v float64 = a * simplex3d(float64(x)*freq, float64(y)*freq, float64(z)*freq, seed)
-		n += v
+	for currOctave := 0; currOctave < dt.oct; currOctave++ {
+		var v float64 = dt.a * simplex3d(float64(x)*dt.freq, float64(y)*dt.freq, float64(z)*dt.freq, seed)
+		dt.n += v
 
-		a *= 0.5
-		freq *= 2.0
+		dt.a *= 0.5
+		dt.freq *= 2.0
 	}
 
-	n = (n + 1.0) * 0.5
+	dt.n = (dt.n + 1.0) * 0.5
 
-	n = math.Pow(n, 1.65)
-	if n < 0 {
-		n = 0
+	dt.n = math.Pow(dt.n, 1.65)
+	if dt.n < 0 {
+		dt.n = 0
 	}
-	return n
+	return dt.n
 }
 
 func simplex3d(xin, yin, zin float64, seed int) float64 {
